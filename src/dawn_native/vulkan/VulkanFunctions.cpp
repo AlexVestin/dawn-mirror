@@ -290,6 +290,12 @@ namespace dawn_native { namespace vulkan {
         GET_DEVICE_PROC(UpdateDescriptorSets);
         GET_DEVICE_PROC(WaitForFences);
 
+        if (deviceInfo.properties.apiVersion >= VK_MAKE_VERSION(1, 1, 0)) {
+            GET_DEVICE_PROC(GetImageMemoryRequirements2);
+        } else {
+            GET_DEVICE_PROC(GetImageMemoryRequirements2KHR);
+        }
+
         if (deviceInfo.HasExt(DeviceExt::ExternalMemoryFD)) {
             GET_DEVICE_PROC(GetMemoryFdKHR);
             GET_DEVICE_PROC(GetMemoryFdPropertiesKHR);

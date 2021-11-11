@@ -246,6 +246,8 @@ namespace dawn_native { namespace vulkan {
         PFN_vkGetEventStatus GetEventStatus = nullptr;
         PFN_vkGetFenceStatus GetFenceStatus = nullptr;
         PFN_vkGetImageMemoryRequirements GetImageMemoryRequirements = nullptr;
+        PFN_vkGetImageMemoryRequirements2 GetImageMemoryRequirements2 = nullptr;
+        PFN_vkGetImageMemoryRequirements2KHR GetImageMemoryRequirements2KHR = nullptr;
         PFN_vkGetImageSparseMemoryRequirements GetImageSparseMemoryRequirements = nullptr;
         PFN_vkGetImageSubresourceLayout GetImageSubresourceLayout = nullptr;
         PFN_vkGetPipelineCacheData GetPipelineCacheData = nullptr;

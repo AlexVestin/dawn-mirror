@@ -104,17 +104,38 @@ namespace dawn_native { namespace vulkan { namespace external_memory {
                                                         VkImage image) {
         DAWN_INVALID_IF(handle < 0, "Importing memory with an invalid handle.");
 
-        VkMemoryRequirements requirements;
-        mDevice->fn.GetImageMemoryRequirements(mDevice->GetVkDevice(), image, &requirements);
+        VkMemoryDedicatedRequirements dedicatedRequirements;
+        dedicatedRequirements.pNext = nullptr;
+        dedicatedRequirements.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS;
+
+        VkMemoryRequirements2 requirements;
+        requirements.pNext = &dedicatedRequirements;
+        requirements.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+
+        VkImageMemoryRequirementsInfo2 info;
+        info.image = image;
+        info.pNext = nullptr;
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2;
+
+        mDevice->fn.GetImageMemoryRequirements2(mDevice->GetVkDevice(), &info, &requirements);
         DAWN_INVALID_IF(requirements.size > importParams.allocationSize,
                         "Requested allocation size (%u) is smaller than the image requires (%u).",
                         importParams.allocationSize, requirements.size);
-
+        
         VkImportMemoryFdInfoKHR importMemoryFdInfo;
         importMemoryFdInfo.sType = VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR;
         importMemoryFdInfo.pNext = nullptr;
         importMemoryFdInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
         importMemoryFdInfo.fd = handle;
+
+        VkMemoryDedicatedAllocateInfo dedicatedMemoryInfo;
+        dedicatedMemoryInfo.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO;
+        dedicatedMemoryInfo.pNext = nullptr;
+        dedicatedMemoryInfo.image = image;
+        if (dedicatedRequirements.prefersDedicatedAllocation || 
+            dedicatedRequirements.requiresDedicatedAllocation) {
+            importMemoryFdInfo.pNext = &dedicatedMemoryInfo;
+        }
 
         VkMemoryAllocateInfo allocateInfo;
         allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -126,6 +147,7 @@ namespace dawn_native { namespace vulkan { namespace external_memory {
         DAWN_TRY(CheckVkSuccess(mDevice->fn.AllocateMemory(mDevice->GetVkDevice(), &allocateInfo,
                                                            nullptr, &*allocatedMemory),
                                 "vkAllocateMemory"));
+
         return allocatedMemory;
     }
 
